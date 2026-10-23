@@ -103,7 +103,7 @@ def registrar_servicio():
         END,
         f"🐾 Mascota: {registro['mascota']} | Dueño: {registro['dueno']}\n"
         f"   Tipo: {tipo} | Tamaño: {tamano} | Servicio: {servicio}\n"
-        f"   Costo total: ${total:,.2f}\n"
+        f"   💰 Costo total: ${total:,.2f}\n"
         f"{'-'*55}\n"
     )
     area_resultados.see(END)
@@ -151,12 +151,12 @@ def generar_resumen():
     # Construir texto del resumen
     resumen = (
         "\n" + "="*55 + "\n"
-        "           RESUMEN DE INGRESOS\n"
+        "           📊 RESUMEN DE INGRESOS 📊\n"
         + "="*55 + "\n"
-        f"Mascotas atendidas: {total_mascotas}\n"
-        f"Ingresos totales:  ${ingresos_totales:,.2f}\n"
-        f"Promedio por servicio: ${promedio:,.2f}\n\n"
-        f"Servicio más solicitado: {servicio_top} ({cantidad_top} veces)\n\n"
+        f"🐶 Mascotas atendidas: {total_mascotas}\n"
+        f"💵 Ingresos totales:  ${ingresos_totales:,.2f}\n"
+        f"📈 Promedio por servicio: ${promedio:,.2f}\n\n"
+        f"🏆 Servicio más solicitado: {servicio_top} ({cantidad_top} veces)\n\n"
         "Detalle por servicio:\n"
     )
     for serv, cant in conteo_servicios.items():
@@ -198,29 +198,6 @@ def limpiar_resultados():
         combo_tipo.set("")
         combo_tamano.set("")
         combo_servicio.set("")
-
-
-# ============================================================
-# FUNCIÓN: Mostrar listado completo de registros
-# ============================================================
-def mostrar_listado():
-    if not servicios_registrados:
-        messagebox.showwarning("Sin datos", "No hay servicios registrados.")
-        return
-
-    area_resultados.insert(END, "\n📋 LISTADO DE SERVICIOS REGISTRADOS\n" + "-"*55 + "\n")
-    # Ciclo while para recorrer la lista (justificado)
-    i = 0
-    while i < len(servicios_registrados):
-        reg = servicios_registrados[i]
-        area_resultados.insert(
-            END,
-            f"{i+1}. {reg['mascota']} ({reg['tipo']}/{reg['tamano']}) - "
-            f"{reg['servicio']} - ${reg['total']:,.2f}\n"
-        )
-        i += 1
-    area_resultados.insert(END, "-"*55 + "\n")
-    area_resultados.see(END)
 
 
 # ============================================================
@@ -289,17 +266,11 @@ btn_resumen = Button(frame_botones, text="Ver resumen",
                      font=("Arial", 11, "bold"), width=18)
 btn_resumen.grid(row=0, column=1, padx=5)
 
-btn_listado = Button(frame_botones, text="Ver listado",
-                     command=mostrar_listado,
-                     bg="#DAA520", fg="white",
-                     font=("Arial", 11, "bold"), width=18)
-btn_listado.grid(row=0, column=2, padx=5)
-
 btn_limpiar = Button(frame_botones, text="Limpiar pantalla",
                      command=limpiar_resultados,
                      bg="#CD5C5C", fg="white",
                      font=("Arial", 11, "bold"), width=18)
-btn_limpiar.grid(row=0, column=3, padx=5)
+btn_limpiar.grid(row=0, column=2, padx=5)
 
 # Área de resultados (Text + Scrollbar)
 frame_resultados = Frame(ventana)
