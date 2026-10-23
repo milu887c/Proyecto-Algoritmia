@@ -1,8 +1,8 @@
 from tkinter import *
-from tkinter import messagebox, ttk
+from tkinter import ttk, messagebox
 
 # ============================================================
-# PRECIOS BASE (pueden modificarse desde la interfaz)
+# PRECIOS BASE POR SERVICIO
 # ============================================================
 PRECIOS_BASE = {
     "Baño": 20000,
@@ -10,285 +10,321 @@ PRECIOS_BASE = {
     "Servicio completo": 45000
 }
 
-# Ajuste por tamaño de mascota (multiplicador)
-AJUSTE_TAMANO = {
+# Recargos según tamaño de mascota (factor multiplicador)
+RECARGO_TAMANO = {
     "Pequeño": 1.0,
-    "Mediano": 1.3,
-    "Grande": 1.6
+    "Mediano": 1.2,
+    "Grande": 1.5
 }
 
-# Ajuste por tipo de mascota (multiplicador)
-AJUSTE_TIPO = {
+# Recargos según tipo de mascota (factor multiplicador)
+RECARGO_TIPO = {
     "Perro": 1.0,
-    "Gato": 1.1,
-    "Otro": 1.2
+    "Gato": 1.15,
+    "Otro": 1.25
 }
 
-# Lista global que almacenará los servicios registrados (diccionarios)
-servicios_registrados = []
+# ============================================================
+# ESTRUCTURAS DE ALMACENAMIENTO EN MEMORIA
+# ============================================================
+servicios_registrados = []   # Lista de diccionarios con cada servicio
 
 
 # ============================================================
-# FUNCIONES DE LÓGICA
+# FUNCIÓN: Calcular costo total del servicio
 # ============================================================
-def calcular_costo(servicio, tamano, tipo, precios):
-    """Calcula el costo total aplicando ajustes por tamaño y tipo."""
-    precio_base = precios[servicio]
-    multiplicador = AJUSTE_TAMANO[tamano] * AJUSTE_TIPO[tipo]
-    return round(precio_base * multiplicador, 2)
+def calcular_costo(tipo_mascota, tamano, servicio):
+    """
+    Calcula el costo total aplicando recargos por tipo y tamaño.
+    Retorna el costo total (float).
+    """
+    precio_base = PRECIOS_BASE[servicio]
+    factor_tipo = RECARGO_TIPO[tipo_mascota]
+    factor_tamano = RECARGO_TAMANO[tamano]
+    total = precio_base * factor_tipo * factor_tamano
+    return round(total, 2)
 
 
-def validar_campos(nombre_mascota, nombre_propietario, servicio, tamano, tipo):
-    """Valida que todos los campos obligatorios estén completos."""
+# ============================================================
+# FUNCIÓN: Validar campos obligatorios
+# ============================================================
+def validar_campos(nombre_mascota, nombre_dueno, tipo, tamano, servicio):
+    """Valida que todos los campos estén diligenciados."""
     if not nombre_mascota.strip():
-        return "Debe ingresar el nombre de la mascota."
-    if not nombre_propietario.strip():
-        return "Debe ingresar el nombre del propietario."
-    if not servicio:
-        return "Debe seleccionar un servicio."
-    if not tamano:
-        return "Debe seleccionar el tamaño de la mascota."
+        messagebox.showerror("Error", "Debe ingresar el nombre de la mascota.")
+        return False
+    if not nombre_dueno.strip():
+        messagebox.showerror("Error", "Debe ingresar el nombre del propietario.")
+        return False
     if not tipo:
-        return "Debe seleccionar el tipo de mascota."
-    return None
-
-
-def obtener_precios_actuales():
-    """Lee los precios que el usuario haya configurado en la interfaz."""
-    try:
-        precios = {
-            "Baño": float(entry_precio_bano.get()),
-            "Corte de pelo": float(entry_precio_corte.get()),
-            "Servicio completo": float(entry_precio_completo.get())
-        }
-        for k, v in precios.items():
-            if v <= 0:
-                raise ValueError
-        return precios
-    except ValueError:
-        raise ValueError("Los precios deben ser números positivos.")
+        messagebox.showerror("Error", "Debe seleccionar el tipo de mascota.")
+        return False
+    if not tamano:
+        messagebox.showerror("Error", "Debe seleccionar el tamaño de la mascota.")
+        return False
+    if not servicio:
+        messagebox.showerror("Error", "Debe seleccionar el servicio.")
+        return False
+    return True
 
 
 # ============================================================
-# FUNCIÓN: REGISTRAR SERVICIO
+# FUNCIÓN: Registrar un servicio
 # ============================================================
 def registrar_servicio():
-    nombre_mascota = entry_mascota.get()
-    nombre_propietario = entry_propietario.get()
-    servicio = combo_servicio.get()
-    tamano = combo_tamano.get()
+    nombre_mascota = entrada_mascota.get()
+    nombre_dueno = entrada_dueno.get()
     tipo = combo_tipo.get()
+    tamano = combo_tamano.get()
+    servicio = combo_servicio.get()
 
     # Validación de campos obligatorios
-    error = validar_campos(nombre_mascota, nombre_propietario, servicio, tamano, tipo)
-    if error:
-        messagebox.showwarning("Validación", error)
+    if not validar_campos(nombre_mascota, nombre_dueno, tipo, tamano, servicio):
         return
 
-    # Validación de precios con try-except
-    try:
-        precios = obtener_precios_actuales()
-    except ValueError as e:
-        messagebox.showerror("Error en precios", str(e))
-        return
+    # Cálculo del costo total
+    total = calcular_costo(tipo, tamano, servicio)
 
-    # Cálculo del costo
-    costo = calcular_costo(servicio, tamano, tipo, precios)
-
-    # Guardar registro como diccionario
+    # Diccionario con el registro del servicio
     registro = {
         "mascota": nombre_mascota.strip(),
-        "propietario": nombre_propietario.strip(),
+        "dueno": nombre_dueno.strip(),
         "tipo": tipo,
         "tamano": tamano,
         "servicio": servicio,
-        "costo": costo
+        "total": total
     }
+
+    # Almacenar en la lista
     servicios_registrados.append(registro)
 
-    # Mostrar detalle del cobro
-    detalle = (
-        "✅ Servicio registrado\n\n"
-        "Mascota: " + registro["mascota"] + "\n"
-        "Propietario: " + registro["propietario"] + "\n"
-        "Tipo: " + registro["tipo"] + "  |  Tamaño: " + registro["tamano"] + "\n"
-        "Servicio: " + registro["servicio"] + "\n"
-        "Costo total: $" + format(costo, ",.2f")
+    # Mostrar detalle del cobro en el área de resultados
+    area_resultados.insert(
+        END,
+        f"🐾 Mascota: {registro['mascota']} | Dueño: {registro['dueno']}\n"
+        f"   Tipo: {tipo} | Tamaño: {tamano} | Servicio: {servicio}\n"
+        f"   Costo total: ${total:,.2f}\n"
+        f"{'-'*55}\n"
     )
-    messagebox.showinfo("Detalle del cobro", detalle)
+    area_resultados.see(END)
 
-    # Actualizar tabla y resumen
-    actualizar_tabla()
-    actualizar_resumen()
-
-    # Limpiar campos (excepto precios)
-    entry_mascota.delete(0, END)
-    entry_propietario.delete(0, END)
-    combo_servicio.set("")
-    combo_tamano.set("")
+    # Limpiar campos
+    entrada_mascota.delete(0, END)
+    entrada_dueno.delete(0, END)
     combo_tipo.set("")
-    entry_mascota.focus()
+    combo_tamano.set("")
+    combo_servicio.set("")
+
+    messagebox.showinfo("Registro exitoso",
+                        f"Servicio registrado para {registro['mascota']}.\n"
+                        f"Total a pagar: ${total:,.2f}")
 
 
 # ============================================================
-# FUNCIÓN: ACTUALIZAR TABLA
+# FUNCIÓN: Generar resumen de ingresos y estadísticas
 # ============================================================
-def actualizar_tabla():
-    # Limpiar tabla
-    for fila in tabla.get_children():
-        tabla.delete(fila)
+def generar_resumen():
+    if not servicios_registrados:
+        messagebox.showwarning("Sin datos",
+                               "No hay servicios registrados aún.")
+        return
 
-    # Recorrer con ciclo for y llenar
-    for i, r in enumerate(servicios_registrados, start=1):
-        tabla.insert("", END, values=(
-            i, r["mascota"], r["propietario"], r["tipo"],
-            r["tamano"], r["servicio"], "$" + format(r["costo"], ",.2f")
-        ))
-
-
-# ============================================================
-# FUNCIÓN: ACTUALIZAR RESUMEN (contadores y acumuladores)
-# ============================================================
-def actualizar_resumen():
-    total_mascotas = len(servicios_registrados)
-    ingresos_totales = 0
+    # Contadores y acumuladores
+    total_mascotas = 0
+    ingresos_totales = 0.0
     conteo_servicios = {"Baño": 0, "Corte de pelo": 0, "Servicio completo": 0}
 
-    # Ciclo for: acumuladores y contadores
-    for r in servicios_registrados:
-        ingresos_totales += r["costo"]
-        conteo_servicios[r["servicio"]] += 1
+    # Ciclo for para recorrer los registros
+    for reg in servicios_registrados:
+        total_mascotas += 1
+        ingresos_totales += reg["total"]
+        if reg["servicio"] in conteo_servicios:
+            conteo_servicios[reg["servicio"]] += 1
 
-    # Determinar servicio más solicitado con condicionales
-    mas_solicitado = "—"
-    if total_mascotas > 0:
-        max_cant = max(conteo_servicios.values())
-        # Ciclo para encontrar todos los empatados
-        empatados = [s for s, c in conteo_servicios.items() if c == max_cant]
-        mas_solicitado = ", ".join(empatados) + " (" + str(max_cant) + ")"
-
+    # Cálculo del promedio
     promedio = ingresos_totales / total_mascotas if total_mascotas > 0 else 0
 
-    lbl_resumen.config(
-        text=(
-            "Mascotas atendidas: " + str(total_mascotas) + "    |    "
-            "Ingresos totales: $" + format(ingresos_totales, ",.2f") + "    |    "
-            "Promedio por servicio: $" + format(promedio, ",.2f") + "\n"
-            "Servicio más solicitado: " + mas_solicitado
-        )
+    # Determinar el servicio más solicitado (condicionales múltiples)
+    servicio_top = max(conteo_servicios, key=conteo_servicios.get)
+    cantidad_top = conteo_servicios[servicio_top]
+
+    # Construir texto del resumen
+    resumen = (
+        "\n" + "="*55 + "\n"
+        "           RESUMEN DE INGRESOS\n"
+        + "="*55 + "\n"
+        f"Mascotas atendidas: {total_mascotas}\n"
+        f"Ingresos totales:  ${ingresos_totales:,.2f}\n"
+        f"Promedio por servicio: ${promedio:,.2f}\n\n"
+        f"Servicio más solicitado: {servicio_top} ({cantidad_top} veces)\n\n"
+        "Detalle por servicio:\n"
     )
+    for serv, cant in conteo_servicios.items():
+        resumen += f"   • {serv}: {cant} atención(es)\n"
+    resumen += "="*55 + "\n"
+
+    area_resultados.insert(END, resumen)
+    area_resultados.see(END)
 
 
 # ============================================================
-# FUNCIÓN: LIMPIAR REGISTROS
+# FUNCIÓN: Limpiar área de resultados
 # ============================================================
-def limpiar_registros():
-    if not servicios_registrados:
-        messagebox.showinfo("Información", "No hay registros para eliminar.")
-        return
-    if messagebox.askyesno("Confirmar", "¿Desea eliminar todos los registros?"):
+def limpiar_resultados():
+    if messagebox.askyesno("Confirmar", "¿Desea borrar el historial y reiniciar la aplicación?\n"
+                                        "Se eliminarán todos los registros en memoria."):
+        # Vaciar la lista de servicios registrados
         servicios_registrados.clear()
-        actualizar_tabla()
-        actualizar_resumen()
-        messagebox.showinfo("Listo", "Registros eliminados correctamente.")
+
+        # Borrar todo el contenido del área de resultados
+        area_resultados.delete("1.0", END)
+
+        # Volver a mostrar el mensaje inicial (igual que al abrir la app)
+        area_resultados.insert(END,
+            "Bienvenido al sistema de la peluquería de mascotas 🐾\n"
+            "Complete los datos y presione 'Registrar servicio'.\n\n"
+            "Precios base:\n"
+            f"   • Baño: ${PRECIOS_BASE['Baño']:,.0f}\n"
+            f"   • Corte de pelo: ${PRECIOS_BASE['Corte de pelo']:,.0f}\n"
+            f"   • Servicio completo: ${PRECIOS_BASE['Servicio completo']:,.0f}\n\n"
+            "Recargos por tamaño: Pequeño x1.0 | Mediano x1.2 | Grande x1.5\n"
+            "Recargos por tipo: Perro x1.0 | Gato x1.15 | Otro x1.25\n"
+            + "-"*55 + "\n"
+        )
+
+        # Limpiar también los campos del formulario (por si quedaron datos)
+        entrada_mascota.delete(0, END)
+        entrada_dueno.delete(0, END)
+        combo_tipo.set("")
+        combo_tamano.set("")
+        combo_servicio.set("")
 
 
 # ============================================================
-# INTERFAZ GRÁFICA
+# FUNCIÓN: Mostrar listado completo de registros
+# ============================================================
+def mostrar_listado():
+    if not servicios_registrados:
+        messagebox.showwarning("Sin datos", "No hay servicios registrados.")
+        return
+
+    area_resultados.insert(END, "\n📋 LISTADO DE SERVICIOS REGISTRADOS\n" + "-"*55 + "\n")
+    # Ciclo while para recorrer la lista (justificado)
+    i = 0
+    while i < len(servicios_registrados):
+        reg = servicios_registrados[i]
+        area_resultados.insert(
+            END,
+            f"{i+1}. {reg['mascota']} ({reg['tipo']}/{reg['tamano']}) - "
+            f"{reg['servicio']} - ${reg['total']:,.2f}\n"
+        )
+        i += 1
+    area_resultados.insert(END, "-"*55 + "\n")
+    area_resultados.see(END)
+
+
+# ============================================================
+# INTERFAZ GRÁFICA CON TKINTER
 # ============================================================
 ventana = Tk()
-ventana.title("🐾 Peluquería de Mascotas - Sistema de Servicios")
-ventana.geometry("980x720")
-ventana.configure(bg="#f4f6fb")
+ventana.title("Peluquería de Mascotas - Registro de Servicios")
+ventana.geometry("750x660")
+ventana.configure(bg="#F4F1EA")
 
-# -------- TÍTULO --------
-Label(ventana, text="🐶 Sistema de Servicios - Peluquería de Mascotas 🐱",
-      font=("Segoe UI", 16, "bold"), bg="#f4f6fb", fg="#2a3b70").pack(pady=10)
+# Título
+titulo = Label(ventana, text="🐾 Peluquería de Mascotas 🐾",
+               font=("Arial", 18, "bold"), bg="#F4F1EA", fg="#4A3B2A")
+titulo.pack(pady=10)
 
-# -------- MARCO: DATOS DE LA MASCOTA --------
-frame_datos = LabelFrame(ventana, text=" Datos de la mascota ",
-                         font=("Segoe UI", 11, "bold"), bg="#f4f6fb", padx=10, pady=10)
-frame_datos.pack(fill="x", padx=15, pady=5)
+# Frame de formulario
+frame_form = Frame(ventana, bg="#F4F1EA")
+frame_form.pack(pady=10)
 
-Label(frame_datos, text="Nombre mascota:", bg="#f4f6fb").grid(row=0, column=0, sticky="w", padx=5, pady=3)
-entry_mascota = Entry(frame_datos, width=25)
-entry_mascota.grid(row=0, column=1, padx=5, pady=3)
+# Nombre de la mascota
+Label(frame_form, text="Nombre de la mascota:", bg="#F4F1EA",
+      font=("Arial", 11)).grid(row=0, column=0, sticky="w", padx=5, pady=5)
+entrada_mascota = Entry(frame_form, width=30, font=("Arial", 11))
+entrada_mascota.grid(row=0, column=1, padx=5, pady=5)
 
-Label(frame_datos, text="Propietario:", bg="#f4f6fb").grid(row=0, column=2, sticky="w", padx=5, pady=3)
-entry_propietario = Entry(frame_datos, width=25)
-entry_propietario.grid(row=0, column=3, padx=5, pady=3)
+# Nombre del propietario
+Label(frame_form, text="Nombre del propietario:", bg="#F4F1EA",
+      font=("Arial", 11)).grid(row=1, column=0, sticky="w", padx=5, pady=5)
+entrada_dueno = Entry(frame_form, width=30, font=("Arial", 11))
+entrada_dueno.grid(row=1, column=1, padx=5, pady=5)
 
-Label(frame_datos, text="Tipo:", bg="#f4f6fb").grid(row=1, column=0, sticky="w", padx=5, pady=3)
-combo_tipo = ttk.Combobox(frame_datos, values=["Perro", "Gato", "Otro"], state="readonly", width=22)
-combo_tipo.grid(row=1, column=1, padx=5, pady=3)
+# Tipo de mascota
+Label(frame_form, text="Tipo de mascota:", bg="#F4F1EA",
+      font=("Arial", 11)).grid(row=2, column=0, sticky="w", padx=5, pady=5)
+combo_tipo = ttk.Combobox(frame_form, values=list(RECARGO_TIPO.keys()),
+                          state="readonly", width=28)
+combo_tipo.grid(row=2, column=1, padx=5, pady=5)
 
-Label(frame_datos, text="Tamaño:", bg="#f4f6fb").grid(row=1, column=2, sticky="w", padx=5, pady=3)
-combo_tamano = ttk.Combobox(frame_datos, values=["Pequeño", "Mediano", "Grande"], state="readonly", width=22)
-combo_tamano.grid(row=1, column=3, padx=5, pady=3)
+# Tamaño
+Label(frame_form, text="Tamaño:", bg="#F4F1EA",
+      font=("Arial", 11)).grid(row=3, column=0, sticky="w", padx=5, pady=5)
+combo_tamano = ttk.Combobox(frame_form, values=list(RECARGO_TAMANO.keys()),
+                            state="readonly", width=28)
+combo_tamano.grid(row=3, column=1, padx=5, pady=5)
 
-Label(frame_datos, text="Servicio:", bg="#f4f6fb").grid(row=2, column=0, sticky="w", padx=5, pady=3)
-combo_servicio = ttk.Combobox(frame_datos, values=["Baño", "Corte de pelo", "Servicio completo"],
-                              state="readonly", width=22)
-combo_servicio.grid(row=2, column=1, padx=5, pady=3)
+# Servicio
+Label(frame_form, text="Servicio:", bg="#F4F1EA",
+      font=("Arial", 11)).grid(row=4, column=0, sticky="w", padx=5, pady=5)
+combo_servicio = ttk.Combobox(frame_form, values=list(PRECIOS_BASE.keys()),
+                              state="readonly", width=28)
+combo_servicio.grid(row=4, column=1, padx=5, pady=5)
 
-# -------- MARCO: PRECIOS --------
-frame_precios = LabelFrame(ventana, text=" Precios base por servicio (editables) ",
-                           font=("Segoe UI", 11, "bold"), bg="#f4f6fb", padx=10, pady=10)
-frame_precios.pack(fill="x", padx=15, pady=5)
-
-Label(frame_precios, text="Baño $:", bg="#f4f6fb").grid(row=0, column=0, padx=5)
-entry_precio_bano = Entry(frame_precios, width=10)
-entry_precio_bano.insert(0, str(PRECIOS_BASE["Baño"]))
-entry_precio_bano.grid(row=0, column=1, padx=5)
-
-Label(frame_precios, text="Corte de pelo $:", bg="#f4f6fb").grid(row=0, column=2, padx=5)
-entry_precio_corte = Entry(frame_precios, width=10)
-entry_precio_corte.insert(0, str(PRECIOS_BASE["Corte de pelo"]))
-entry_precio_corte.grid(row=0, column=3, padx=5)
-
-Label(frame_precios, text="Servicio completo $:", bg="#f4f6fb").grid(row=0, column=4, padx=5)
-entry_precio_completo = Entry(frame_precios, width=10)
-entry_precio_completo.insert(0, str(PRECIOS_BASE["Servicio completo"]))
-entry_precio_completo.grid(row=0, column=5, padx=5)
-
-# -------- BOTONES --------
-frame_botones = Frame(ventana, bg="#f4f6fb")
+# Frame de botones
+frame_botones = Frame(ventana, bg="#F4F1EA")
 frame_botones.pack(pady=10)
 
-btn_registrar = Button(frame_botones, text="➕ Registrar servicio", command=registrar_servicio,
-                       bg="#2a9d8f", fg="white", font=("Segoe UI", 10, "bold"),
-                       padx=15, pady=6, cursor="hand2")
-btn_registrar.grid(row=0, column=0, padx=10)
+btn_registrar = Button(frame_botones, text="Registrar servicio",
+                       command=registrar_servicio,
+                       bg="#8FBC8F", fg="white",
+                       font=("Arial", 11, "bold"), width=18)
+btn_registrar.grid(row=0, column=0, padx=5)
 
-btn_limpiar = Button(frame_botones, text="🗑️ Limpiar registros", command=limpiar_registros,
-                     bg="#e76f51", fg="white", font=("Segoe UI", 10, "bold"),
-                     padx=15, pady=6, cursor="hand2")
-btn_limpiar.grid(row=0, column=1, padx=10)
+btn_resumen = Button(frame_botones, text="Ver resumen",
+                     command=generar_resumen,
+                     bg="#4682B4", fg="white",
+                     font=("Arial", 11, "bold"), width=18)
+btn_resumen.grid(row=0, column=1, padx=5)
 
-# -------- TABLA DE REGISTROS --------
-frame_tabla = LabelFrame(ventana, text=" Servicios realizados ",
-                         font=("Segoe UI", 11, "bold"), bg="#f4f6fb", padx=10, pady=10)
-frame_tabla.pack(fill="both", expand=True, padx=15, pady=5)
+btn_listado = Button(frame_botones, text="Ver listado",
+                     command=mostrar_listado,
+                     bg="#DAA520", fg="white",
+                     font=("Arial", 11, "bold"), width=18)
+btn_listado.grid(row=0, column=2, padx=5)
 
-columnas = ("#", "Mascota", "Propietario", "Tipo", "Tamaño", "Servicio", "Costo")
-tabla = ttk.Treeview(frame_tabla, columns=columnas, show="headings", height=8)
-for col in columnas:
-    tabla.heading(col, text=col)
-    tabla.column(col, width=110, anchor="center")
-tabla.column("#", width=40)
-tabla.pack(fill="both", expand=True)
+btn_limpiar = Button(frame_botones, text="Limpiar pantalla",
+                     command=limpiar_resultados,
+                     bg="#CD5C5C", fg="white",
+                     font=("Arial", 11, "bold"), width=18)
+btn_limpiar.grid(row=0, column=3, padx=5)
 
-# -------- RESUMEN --------
-frame_resumen = LabelFrame(ventana, text=" Resumen del establecimiento ",
-                           font=("Segoe UI", 11, "bold"), bg="#f4f6fb", padx=10, pady=10)
-frame_resumen.pack(fill="x", padx=15, pady=10)
+# Área de resultados (Text + Scrollbar)
+frame_resultados = Frame(ventana)
+frame_resultados.pack(pady=10, padx=20, fill="both", expand=True)
 
-lbl_resumen = Label(frame_resumen,
-                    text="Mascotas atendidas: 0    |    Ingresos totales: $0.00    |    "
-                         "Promedio por servicio: $0.00\nServicio más solicitado: —",
-                    font=("Segoe UI", 10), bg="#f4f6fb", fg="#2a3b70", justify="left")
-lbl_resumen.pack(anchor="w")
+scroll = Scrollbar(frame_resultados)
+scroll.pack(side=RIGHT, fill=Y)
 
-# -------- INICIALIZAR --------
-actualizar_resumen()
+area_resultados = Text(frame_resultados, height=15, width=80,
+                       font=("Courier", 10), yscrollcommand=scroll.set,
+                       bg="#FFFEF8", wrap="word")
+area_resultados.pack(side=LEFT, fill="both", expand=True)
+scroll.config(command=area_resultados.yview)
+
+# Mensaje inicial
+area_resultados.insert(END,
+    "Bienvenido al sistema de la peluquería de mascotas 🐾\n"
+    "Complete los datos y presione 'Registrar servicio'.\n\n"
+    "Precios base:\n"
+    f"   • Baño: ${PRECIOS_BASE['Baño']:,.0f}\n"
+    f"   • Corte de pelo: ${PRECIOS_BASE['Corte de pelo']:,.0f}\n"
+    f"   • Servicio completo: ${PRECIOS_BASE['Servicio completo']:,.0f}\n\n"
+    "Recargos por tamaño: Pequeño x1.0 | Mediano x1.2 | Grande x1.5\n"
+    "Recargos por tipo: Perro x1.0 | Gato x1.15 | Otro x1.25\n"
+    + "-"*55 + "\n"
+)
+
 ventana.mainloop()
