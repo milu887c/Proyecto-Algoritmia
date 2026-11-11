@@ -188,9 +188,19 @@ def generar_resumen():
         conteo_servicios[reg["servicio"]] += 1
 
     promedio = ingresos_totales / total_mascotas
+    cantidad_top = max(conteo_servicios.values())
 
-    servicio_top = max(conteo_servicios, key=conteo_servicios.get)
-    cantidad_top = conteo_servicios[servicio_top]
+    servicios_top = []
+    for serv, cant in conteo_servicios.items():
+        if cant == cantidad_top:
+            servicios_top.append(serv)
+
+    if len(servicios_top) == 1:
+        texto_top = f"{servicios_top[0]} ({cantidad_top} veces)"
+    else:
+        texto_top = f"Hubieron {len(servicios_top)} servicios igualmente solicitados: " + ", ".join(
+            f"{s} ({cantidad_top} veces)" for s in servicios_top
+        )
 
     resumen = (
         "\n" + "="*55 + "\n"
@@ -199,7 +209,7 @@ def generar_resumen():
         f"Mascotas atendidas: {total_mascotas}\n"
         f"Ingresos totales:  ${ingresos_totales:,.2f}\n"
         f"Promedio por servicio: ${promedio:,.2f}\n\n"
-        f"Servicio más solicitado: {servicio_top} ({cantidad_top} veces)\n\n"
+        f"Servicio más solicitado: {texto_top}\n\n"
         "Detalle por servicio:\n"
     )
     for serv, cant in conteo_servicios.items():
