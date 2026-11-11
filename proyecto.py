@@ -1,9 +1,8 @@
 from tkinter import *
 from tkinter import ttk, messagebox
 
-# ============================================================
+
 # PRECIOS BASE POR SERVICIO
-# ============================================================
 PRECIOS_BASE = {
     "Baño": 20000,
     "Corte de pelo": 30000,
@@ -22,27 +21,23 @@ RECARGO_TIPO = {
     "Otro": 1.25
 }
 
-# ============================================================
-# ESTRUCTURAS DE ALMACENAMIENTO EN MEMORIA
-# ============================================================
-servicios_registrados = []   # lo que se muestra / se va registrando en pantalla
-historial_servicios = []     # histórico acumulado, NUNCA se borra al limpiar pantalla
+
+# ALMACENAMIENTO EN MEMORIA
+servicios_registrados = []   
+historial_servicios = []     
 
 
-# ============================================================
-# FUNCIÓN AUXILIAR: Escribir en el área de resultados
-# (habilita, escribe, deshabilita)
-# ============================================================
+
+# FUNCIÓN Escribir en el área de resultados
 def escribir_resultado(texto):
-    area_resultados.config(state="normal")   # habilitar para escribir
+    area_resultados.config(state="normal")   
     area_resultados.insert(END, texto)
     area_resultados.see(END)
-    area_resultados.config(state="disabled") # volver a bloquear
+    area_resultados.config(state="disabled") 
 
 
-# ============================================================
-# FUNCIÓN: Calcular costo total del servicio
-# ============================================================
+
+# FUNCIÓN Calcular costo total del servicio
 def calcular_costo(tipo_mascota, tamano, servicio):
     try:
         precio_base = PRECIOS_BASE[servicio]
@@ -56,9 +51,8 @@ def calcular_costo(tipo_mascota, tamano, servicio):
         return None
 
 
-# ============================================================
-# FUNCIÓN: Validar campos obligatorios
-# ============================================================
+
+# FUNCIÓN Validar campos 
 def validar_campos(nombre_mascota, nombre_dueno, tipo, tamano, servicio):
     if not nombre_mascota.strip():
         messagebox.showerror("Error", "Debe ingresar el nombre de la mascota.")
@@ -78,9 +72,7 @@ def validar_campos(nombre_mascota, nombre_dueno, tipo, tamano, servicio):
     return True
 
 
-# ============================================================
-# FUNCIÓN: Aplicar descuento opcional (valida con try-except)
-# ============================================================
+# FUNCIÓN Aplicar descuento 
 def aplicar_descuento(total):
     texto = entrada_descuento.get().strip()
 
@@ -103,9 +95,8 @@ def aplicar_descuento(total):
     return round(total_final, 2), descuento
 
 
-# ============================================================
-# FUNCIÓN: Mostrar mensaje inicial
-# ============================================================
+
+# FUNCIÓN Mostrar mensaje inicial
 def mostrar_mensaje_inicial():
     escribir_resultado(
         "Bienvenido al sistema de la peluquería de mascotas 🐾\n"
@@ -120,9 +111,7 @@ def mostrar_mensaje_inicial():
     )
 
 
-# ============================================================
-# FUNCIÓN: Registrar un servicio
-# ============================================================
+# FUNCIÓN Registrar un servicio
 def registrar_servicio():
     nombre_mascota = entrada_mascota.get()
     nombre_dueno = entrada_dueno.get()
@@ -153,17 +142,17 @@ def registrar_servicio():
     }
 
     servicios_registrados.append(registro)
-    historial_servicios.append(registro)   # ← también al historial
+    historial_servicios.append(registro)   
 
     detalle = (
-        f"🐾 Mascota: {registro['mascota']} | Dueño: {registro['dueno']}\n"
-        f"   Tipo: {tipo} | Tamaño: {tamano} | Servicio: {servicio}\n"
-        f"   💰 Costo base: ${total_base:,.2f}\n"
+        f"Mascota: {registro['mascota']} | Dueño: {registro['dueno']}\n"
+        f"Tipo: {tipo} | Tamaño: {tamano} | Servicio: {servicio}\n"
+        f"Costo base: ${total_base:,.2f}\n"
     )
     if descuento > 0:
-        detalle += f"   🎁 Descuento aplicado: {descuento:g}%\n"
+        detalle += f"    Descuento aplicado: {descuento:g}%\n"
     detalle += (
-        f"   ✅ Total a pagar: ${total_final:,.2f}\n"
+        f"    Total a pagar: ${total_final:,.2f}\n"
         f"{'-'*55}\n"
     )
     escribir_resultado(detalle)
@@ -180,9 +169,9 @@ def registrar_servicio():
                         f"Total a pagar: ${total_final:,.2f}")
 
 
-# ============================================================
-# FUNCIÓN: Generar resumen (usa ciclo FOR) — sobre el HISTORIAL
-# ============================================================
+
+# FUNCIÓN Generar resumen con ciclo for
+
 def generar_resumen():
     if not historial_servicios:
         messagebox.showwarning("Sin datos",
@@ -205,12 +194,12 @@ def generar_resumen():
 
     resumen = (
         "\n" + "="*55 + "\n"
-        "           📊 RESUMEN DE INGRESOS 📊\n"
+        "            RESUMEN DE INGRESOS\n"
         + "="*55 + "\n"
-        f"🐶 Mascotas atendidas: {total_mascotas}\n"
-        f"💵 Ingresos totales:  ${ingresos_totales:,.2f}\n"
-        f"📈 Promedio por servicio: ${promedio:,.2f}\n\n"
-        f"🏆 Servicio más solicitado: {servicio_top} ({cantidad_top} veces)\n\n"
+        f"Mascotas atendidas: {total_mascotas}\n"
+        f"Ingresos totales:  ${ingresos_totales:,.2f}\n"
+        f"Promedio por servicio: ${promedio:,.2f}\n\n"
+        f"Servicio más solicitado: {servicio_top} ({cantidad_top} veces)\n\n"
         "Detalle por servicio:\n"
     )
     for serv, cant in conteo_servicios.items():
@@ -220,16 +209,15 @@ def generar_resumen():
     escribir_resultado(resumen)
 
 
-# ============================================================
-# FUNCIÓN: Mostrar listado (usa ciclo WHILE) — sobre el HISTORIAL
-# ============================================================
+
+# FUNCIÓN Mostrar listado con ciclo while
 def mostrar_listado():
     if not historial_servicios:
         messagebox.showwarning("Sin datos", "No hay servicios registrados.")
         return
 
     escribir_resultado(
-        "\n📋 LISTADO DE SERVICIOS REGISTRADOS\n" + "-"*55 + "\n"
+        "\nLISTADO DE SERVICIOS REGISTRADOS\n" + "-"*55 + "\n"
     )
 
     i = 0
@@ -244,18 +232,14 @@ def mostrar_listado():
     escribir_resultado("-"*55 + "\n")
 
 
-# ============================================================
-# FUNCIÓN: Limpiar pantalla (conserva el historial → resumen y listado intactos)
-# ============================================================
+# FUNCIÓN Limpiar pantalla 
 def limpiar_resultados():
     if messagebox.askyesno("Confirmar",
                            "¿Desea borrar la pantalla?\n"
                            "El historial acumulado se conservará y seguirá "
                            "apareciendo en 'Ver resumen' y 'Ver listado'."):
-        servicios_registrados.clear()   # solo la vista actual
-        # historial_servicios NO se toca
-
-        # Borrar todo el contenido (hay que habilitar para poder borrar)
+        servicios_registrados.clear()   
+        
         area_resultados.config(state="normal")
         area_resultados.delete("1.0", END)
         area_resultados.config(state="disabled")
@@ -270,9 +254,8 @@ def limpiar_resultados():
         combo_servicio.set("")
 
 
-# ============================================================
-# FUNCIÓN NUEVA: Reiniciar TODO (borra historial → resumen y listado quedan vacíos)
-# ============================================================
+
+# FUNCIÓN Borrar historial
 def reiniciar_todo():
     if messagebox.askyesno("Confirmar",
                            "¿Borrar TODO el historial? Esta acción no se puede deshacer.\n"
@@ -294,9 +277,8 @@ def reiniciar_todo():
         combo_servicio.set("")
 
 
-# ============================================================
-# INTERFAZ GRÁFICA CON TKINTER
-# ============================================================
+
+# =============INTERFAZ GRÁFICA CON TKINTER=============
 ventana = Tk()
 ventana.title("Peluquería de Mascotas - Registro de Servicios")
 ventana.geometry("760x690")
